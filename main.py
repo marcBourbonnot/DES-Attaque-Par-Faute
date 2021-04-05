@@ -122,6 +122,30 @@ Sboxes = [
     ]
 ]
 
+#  PC1 :
+PC1 = [
+    57, 49, 41, 33, 25, 17, 9,
+    1,  58, 50, 42, 34, 26, 18,
+    10, 2,  59, 51, 43, 35, 27,
+    19, 11, 3,  60, 52, 44, 36,
+    63, 55, 47, 39, 31, 23, 15,
+    7,  62, 54, 46, 38, 30, 22,
+    14, 6,  61, 53, 45, 37, 29,
+    21, 13, 5,  28, 20, 12, 4
+]
+
+#  PC2 :
+PC2 = [
+    14, 17, 11, 24, 1,  5,
+    3,  28, 15, 6,  21, 10,
+    23, 19, 12, 4,  26, 8,
+    16, 7,  27, 20, 13, 2,
+    41, 52, 31, 37, 47, 55,
+    30, 40, 51, 45, 33, 48,
+    44, 49, 39, 56, 34, 53,
+    46, 42, 50, 36, 29, 32
+]
+
 
 #  Fonctions :
 #  Fonction permettant de passer de la notation hexadecimal a la notation binaire
@@ -208,6 +232,32 @@ def calculCoupleInput(value):
     return res
 
 
+#  Fonction permettant de calculer l'inverse de la permutation PC1
+def calcul_Inverse_PC1(value):
+    tmp = [2 for i in range(64)]
+    for i in range(len(PC1)):
+        tmp[PC1[i] - 1] = value[i]
+
+    res = ""
+    for i in tmp:
+        res += str(i)
+
+    return res
+
+
+#  Fonction permettant de calculer l'inverse de la permutation PC2
+def calcul_Inverse_PC2(value):
+    tmp = [0 for i in range(56)]
+    for i in range(len(PC2)):
+        tmp[PC2[i] - 1] = value[i]
+
+    res = ""
+    for i in tmp:
+        res += str(i)
+
+    return res
+
+
 #  Fonction de test permettant de représenter visuellement la différence entre une valeur et un tableau de valeur
 def testAffichageDifferenceEntreVraiEtLesFaux(val, tab):
     for i in range(len(tab)):
@@ -287,7 +337,7 @@ def calculK16():
         diff_Out = diffs_SBoxOut_SboxOutFaux[h]
 
         for i in range(len(diff_In)):
-            if diff_In[i] == "1" and i < 6:
+            if diff_In[i] == "1":
                 value_In = diff_In[i // 6 * 6:i // 6 * 6 + 6]
                 value_Out = diff_Out[i // 6 * 4:i // 6 * 4 + 4]
 
@@ -300,20 +350,25 @@ def calculK16():
                     if xor(val1, val2) == value_Out:
                         # print(value_In + " " + value_Out + " => " + couple[0] + " " + couple[1] + " => " + xor(E_L16[i // 6 * 6:i // 6 * 6 + 6], couple[0]))
                         clePossible1 = xor(E_L16[i // 6 * 6:i // 6 * 6 + 6], couple[0])
-                        if not clePossible[numSBox].__contains__(clePossible1):
-                            clePossible[numSBox].append(clePossible1)
+                        # if not clePossible[numSBox].__contains__(clePossible1):
+                        clePossible[numSBox].append(clePossible1)
 
-    for i in clePossible[0]:
-        K16PossibleXorEL16 = xor(i, L16[:6])
-        test = True
-        for j in range(len(L16Faux)):
-            fault = L16Faux[j][:6]
-            K16PossibleXorEL16Faux = xor(i, fault)
-            if xor(K16PossibleXorEL16, K16PossibleXorEL16Faux) != diffs_SBoxIn_SBoxInFaux[j][:6]:
-                test = False
-        if test:
-            print(i)
+    import collections
+
+    for i in range(len(clePossible)):
+        print(collections.Counter(clePossible[i]))
 
 
+# calculK16()
 
-calculK16()
+k16 = bin(0x106029929741031).replace('0b', '')
+
+print(k16)
+
+PC2_Inv_K16 = calcul_Inverse_PC2(k16)
+
+print(PC2_Inv_K16)
+
+
+print(calcul_Inverse_PC1('0100011100101010b000000000001010110000110001000010000010'))
+
