@@ -195,7 +195,17 @@ def calculSBoxes(value, tabSbox):
     indice_ligne = int(ligne, 2)
     indice_colonne = int(colonne, 2)
 
-    return tabSbox[indice_ligne * 16 + indice_colonne]
+    return bin(tabSbox[indice_ligne * 16 + indice_colonne]).replace("0b", "").zfill(4)
+
+
+#  Fonction donnant les coulples dont la difference = value (pour calculer les couples possibles d'entre de sbox)
+def calculCoupleInput(value):
+    res = []
+    for i in range(64):
+        iBinValue = bin(i).replace("0b", "").zfill(6)
+        res.append((iBinValue, xor(value, iBinValue)))
+
+    return res
 
 
 #  Fonction de test permettant de représenter visuellement la différence entre une valeur et un tableau de valeur
@@ -238,6 +248,11 @@ def calculK16():
         L16Faux.append(i[32:])
         R16Faux.append(i[:32])
 
+    #  Calcul des differences entre L16 et toutes les valeurs possibles de L16 faute
+    diffs_L16_L16Faux = []
+    for i in L16Faux:
+        diffs_L16_L16Faux.append(xor(L16, i))
+
     #  On calcul E(L16) = E(R15) (32 bits (L16) -> 48 bits(E(L16)))
     E_L16 = calcul_E(L16)
 
@@ -246,10 +261,59 @@ def calculK16():
         E_L16Faute.append(calcul_E(i))
 
     #  Calcul des differences entre E(L16) = E(R15) et toutes les valeurs possibles de E(L16) faute
-    diff_EL16_EL16Faux = []
+    diffs_SBoxIn_SBoxInFaux = []
     for i in E_L16Faute:
-        diff_EL16_EL16Faux.append(xor(E_L16, i))
-        print(xor(E_L16, i))
+        diffs_SBoxIn_SBoxInFaux.append(xor(E_L16, i))
+
+    #  Calcul des differences entre F(R16) et toutes les valeurs possibles de F(R16) faute
+    diffs_FR16_FR16Faux = []
+    for i in R16Faux:
+        diffs_FR16_FR16Faux.append(xor(R16, i))
+
+    #  Calcul des differences en sortie des Sboxs entre la valeur juste et les valeurs faussees
+    diffs_SBoxOut_SboxOutFaux = []
+    for i in diffs_FR16_FR16Faux:
+        diffs_SBoxOut_SboxOutFaux.append(calcul_Inverse_P(i))
+
+    # lignes a decommenter pour afficher toutes les differences a differents moments dans la fonction F
+    # for i in range(len(diffs_SBoxIn_SBoxInFaux)):
+    #     print(diffs_L16_L16Faux[i] + " => " + diffs_SBoxIn_SBoxInFaux[i] + " => " + diffs_SBoxOut_SboxOutFaux[i])
+
+    # on determine les entrees a etudier (les sbox dont au moins un bit de diff en entre = 1) pour trouver les
+    # couples de valeurs possibles pour entre de SBox valide et entree faute
+    clePossible = [[] for i in range(8)]
+    for h in range(len(diffs_SBoxIn_SBoxInFaux)):
+        diff_In = diffs_SBoxIn_SBoxInFaux[h]
+        diff_Out = diffs_SBoxOut_SboxOutFaux[h]
+
+        for i in range(len(diff_In)):
+            if diff_In[i] == "1" and i < 6:
+                value_In = diff_In[i // 6 * 6:i // 6 * 6 + 6]
+                value_Out = diff_Out[i // 6 * 4:i // 6 * 4 + 4]
+
+                couplesSboxIn = calculCoupleInput(value_In)
+                numSBox = i // 6
+                # print("\n")
+                for couple in couplesSboxIn:
+                    val1 = calculSBoxes(couple[0], Sboxes[numSBox])
+                    val2 = calculSBoxes(couple[1], Sboxes[numSBox])
+                    if xor(val1, val2) == value_Out:
+                        # print(value_In + " " + value_Out + " => " + couple[0] + " " + couple[1] + " => " + xor(E_L16[i // 6 * 6:i // 6 * 6 + 6], couple[0]))
+                        clePossible1 = xor(E_L16[i // 6 * 6:i // 6 * 6 + 6], couple[0])
+                        if not clePossible[numSBox].__contains__(clePossible1):
+                            clePossible[numSBox].append(clePossible1)
+
+    for i in clePossible[0]:
+        K16PossibleXorEL16 = xor(i, L16[:6])
+        test = True
+        for j in range(len(L16Faux)):
+            fault = L16Faux[j][:6]
+            K16PossibleXorEL16Faux = xor(i, fault)
+            if xor(K16PossibleXorEL16, K16PossibleXorEL16Faux) != diffs_SBoxIn_SBoxInFaux[j][:6]:
+                test = False
+        if test:
+            print(i)
+
 
 
 calculK16()
