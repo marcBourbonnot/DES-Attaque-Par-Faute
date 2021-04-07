@@ -2,6 +2,11 @@
 
 
 #  Mes donnees :
+#  Message clair :
+import keytest
+
+msgClair = "E5 D0 3E 8A 4C E5 13 2F"
+
 #  Message chiffre juste :
 hexaChiffrJuste = "EF 3F BB 0D 09 61 CF 24"
 
@@ -49,6 +54,16 @@ IP = [58, 50, 42, 34, 26, 18, 10, 2,
       59, 51, 43, 35, 27, 19, 11, 3,
       61, 53, 45, 37, 29, 21, 13, 5,
       63, 55, 47, 39, 31, 23, 15, 7]
+
+#  Inverse IP IP-1:
+IP_inv = [40, 8, 48, 16, 56, 24, 64, 32,
+          39, 7, 47, 15, 55, 23, 63, 31,
+          38, 6, 46, 14, 54, 22, 62, 30,
+          37, 5, 45, 13, 53, 21, 61, 29,
+          36, 4, 44, 12, 52, 20, 60, 28,
+          35, 3, 43, 11, 51, 19, 59, 27,
+          34, 2, 42, 10, 50, 18, 58, 26,
+          33, 1, 41, 9, 49, 17, 57, 25]
 
 #  E :
 E = [32, 1, 2, 3, 4, 5,
@@ -125,33 +140,37 @@ Sboxes = [
 #  PC1 :
 PC1 = [
     57, 49, 41, 33, 25, 17, 9,
-    1,  58, 50, 42, 34, 26, 18,
-    10, 2,  59, 51, 43, 35, 27,
-    19, 11, 3,  60, 52, 44, 36,
+    1, 58, 50, 42, 34, 26, 18,
+    10, 2, 59, 51, 43, 35, 27,
+    19, 11, 3, 60, 52, 44, 36,
     63, 55, 47, 39, 31, 23, 15,
-    7,  62, 54, 46, 38, 30, 22,
-    14, 6,  61, 53, 45, 37, 29,
-    21, 13, 5,  28, 20, 12, 4
+    7, 62, 54, 46, 38, 30, 22,
+    14, 6, 61, 53, 45, 37, 29,
+    21, 13, 5, 28, 20, 12, 4
 ]
 
 #  PC2 :
 PC2 = [
-    14, 17, 11, 24, 1,  5,
-    3,  28, 15, 6,  21, 10,
-    23, 19, 12, 4,  26, 8,
-    16, 7,  27, 20, 13, 2,
+    14, 17, 11, 24, 1, 5,
+    3, 28, 15, 6, 21, 10,
+    23, 19, 12, 4, 26, 8,
+    16, 7, 27, 20, 13, 2,
     41, 52, 31, 37, 47, 55,
     30, 40, 51, 45, 33, 48,
     44, 49, 39, 56, 34, 53,
     46, 42, 50, 36, 29, 32
 ]
 
+#  Vi
+Vi = [1, 1, 2, 2, 2, 2, 2, 2,
+      1, 2, 2, 2, 2, 2, 2, 1]
+
 
 #  Fonctions :
 #  Fonction permettant de passer de la notation hexadecimal a la notation binaire
 def from_hex_to_bin(hex):
     # Suppression des espaces potentiellement presents qui sont non necessaires a la convertion
-    hex = hex.replace(" ", "")
+    hex = hex.replace(" ", "").zfill(16)
     res = ""
     for i in hex:
         # zfill(6) : 4 bit pour l'hexa + 2 bit pour "0b" (enlever ensuite)
@@ -164,6 +183,14 @@ def calcul_IP(bin):
     res = ""
     for i in range(0, 64):
         res += bin[IP[i] - 1]
+    return res
+
+
+#  Fonction permettant de calculer la permutation IP-1 a partir d'une notation bianire sur 64 bits
+def calcul_Inverse_IP(bin):
+    res = ""
+    for i in range(0, 64):
+        res += bin[IP_inv[i] - 1]
     return res
 
 
@@ -232,6 +259,15 @@ def calculCoupleInput(value):
     return res
 
 
+#  Fonction permettant de calculer la permutation PC1
+def calcul_PC1(value):
+    res = ''
+    for i in range(len(PC1)):
+        res += value[PC1[i] - 1]
+
+    return res
+
+
 #  Fonction permettant de calculer l'inverse de la permutation PC1
 def calcul_Inverse_PC1(value):
     tmp = [2 for i in range(64)]
@@ -245,9 +281,18 @@ def calcul_Inverse_PC1(value):
     return res
 
 
+#  Fonction permettant de calculer la permutation PC2
+def calcul_PC2(value):
+    res = ''
+    for i in range(len(PC2)):
+        res += value[PC2[i] - 1]
+
+    return res
+
+
 #  Fonction permettant de calculer l'inverse de la permutation PC2
 def calcul_Inverse_PC2(value):
-    tmp = [0 for i in range(56)]
+    tmp = [2 for i in range(56)]
     for i in range(len(PC2)):
         tmp[PC2[i] - 1] = value[i]
 
@@ -255,7 +300,18 @@ def calcul_Inverse_PC2(value):
     for i in tmp:
         res += str(i)
 
-    return res
+    puiss = []
+    for i in range(2 ** 8):
+        puiss.append(bin(i).replace('0b', '').zfill(8))
+
+    possibleValues = []
+    for i in range(2 ** 8):
+        tmp = res
+        for j in range(8):
+            tmp = tmp.replace('2', puiss[i][j], 1)
+        possibleValues.append(tmp)
+
+    return possibleValues
 
 
 #  Fonction de test permettant de représenter visuellement la différence entre une valeur et un tableau de valeur
@@ -343,32 +399,146 @@ def calculK16():
 
                 couplesSboxIn = calculCoupleInput(value_In)
                 numSBox = i // 6
-                # print("\n")
                 for couple in couplesSboxIn:
                     val1 = calculSBoxes(couple[0], Sboxes[numSBox])
                     val2 = calculSBoxes(couple[1], Sboxes[numSBox])
                     if xor(val1, val2) == value_Out:
-                        # print(value_In + " " + value_Out + " => " + couple[0] + " " + couple[1] + " => " + xor(E_L16[i // 6 * 6:i // 6 * 6 + 6], couple[0]))
-                        clePossible1 = xor(E_L16[i // 6 * 6:i // 6 * 6 + 6], couple[0])
-                        # if not clePossible[numSBox].__contains__(clePossible1):
-                        clePossible[numSBox].append(clePossible1)
+                        clePossibleCouple = xor(E_L16[i // 6 * 6:i // 6 * 6 + 6], couple[
+                            0])  # ici je ne fais pas avec couple[1], car la methode calculCoupleInput me donnera le couple (couple[1], couple[0])
+                        clePossible[numSBox].append(clePossibleCouple)
 
     import collections
 
     for i in range(len(clePossible)):
-        print(collections.Counter(clePossible[i]))
+        #print(collections.Counter(clePossible[i]))
+        True
+
+    K16 = "000000110000011000111101100000110001100101011101"
+
+    #  Verifications
+    for j in range(32):
+        FK16XorEL16 = xor(K16, E_L16)
+        FK16XorEL16F = xor(K16, E_L16Faute[j])
+
+        sbox = ''
+        for i in range(0, len(FK16XorEL16), 6):
+            sbox += calculSBoxes(FK16XorEL16[i: i + 6], Sboxes[i // 6])
+
+        permSbox = calcul_P(sbox)
+
+        sboxF = ''
+        for i in range(0, len(FK16XorEL16F), 6):
+            sboxF += calculSBoxes(FK16XorEL16F[i: i + 6], Sboxes[i // 6])
+
+        permSboxF = calcul_P(sboxF)
+
+        if xor(permSbox, permSboxF) != xor(R16, R16Faux[j]):
+            exit('erreur sur K16')
+
+        L15 = xor(permSbox, R16)
+        #print(xor(permSboxF, R16Faux[j]) == L15)
+
+    return K16
 
 
 # calculK16()
 
-k16 = bin(0x106029929741031).replace('0b', '')
 
-print(k16)
-
-PC2_Inv_K16 = calcul_Inverse_PC2(k16)
-
-print(PC2_Inv_K16)
+#  Partie 2 : Calcul de K à partir de K16
+def shift(l, n):
+    return l[n:] + l[:n]
 
 
-print(calcul_Inverse_PC1('0100011100101010b000000000001010110000110001000010000010'))
+def calculKsFromK16(K16):
+    C16D16s = calcul_Inverse_PC2(K16)
 
+    keysWithoutSignByte = []
+    for C0D0 in C16D16s:
+        keysWithoutSignByte.append(calcul_Inverse_PC1(C0D0))
+
+    keys = []
+    for j in keysWithoutSignByte:
+        key = ""
+        for i in range(0, len(j), 8):
+            octet = j[i:i + 8]
+            count = octet.count("1")
+            if count % 2 == 0:
+                octet = octet.replace("2", "1")
+            else:
+                octet = octet.replace("2", "0")
+            key += octet
+        keys.append(key)
+
+    return keys
+
+
+K = '1010010000111111010011001101001111000100010001000101010111100011'
+Kw = '1010010000111110010011001101001111000100010001010101010011100011'
+C0D0 = '10011001111111001000001101001000101001110111000001101010'
+K16 = '111111000001101111000010000001011010101001011010'
+
+
+def key_scheduler(k):
+    PC1_K = calcul_PC1(k)
+
+    c0 = PC1_K[:28]
+    d0 = PC1_K[28:]
+
+    ci_di = []
+    for shiftValue in Vi:
+        c0 = shift(c0, shiftValue)
+        d0 = shift(d0, shiftValue)
+        ci_di.append((c0, d0))
+
+    keys = []
+    for ci, di in ci_di:
+        tmp = ci + di
+        keys.append(calcul_PC2(tmp))
+
+    return keys
+
+
+def fonction_F(ri, key):
+    E_ri = calcul_E(ri)
+
+    E_riXorKi = xor(E_ri, key)
+
+    SBoxOut = ""
+    for i in range(0, 48, 6):
+        SBoxOut += calculSBoxes(E_riXorKi[i:i + 6], Sboxes[i // 6])
+
+    P_SBoxOut = calcul_P(SBoxOut)
+
+    return P_SBoxOut
+
+
+def des(msg, k):
+    keys = key_scheduler(k)
+
+    IP_msg = calcul_IP(msg)
+
+    l0 = IP_msg[:32]
+    r0 = IP_msg[32:]
+
+    li_old = l0
+    ri_old = r0
+    for i in range(16):
+        li = ri_old
+        ri = xor(li_old, fonction_F(ri_old, keys[i]))
+
+        li_old = li
+        ri_old = ri
+
+    cipher = calcul_Inverse_IP(ri + li)
+
+    return cipher
+
+
+keys = calculKsFromK16(calculK16())
+
+for key in keys:
+    c = des(from_hex_to_bin(msgClair), key)
+    if c == from_hex_to_bin(hexaChiffrJuste):
+        trueKey = key
+
+print(hex(int(trueKey, 2)).replace('0x', '').zfill(16))
