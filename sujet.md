@@ -1,3 +1,8 @@
+Développement d'un programme implémentant une attaque par faute sur le DES sur R15 au 15° tour.
+Elements fournis :
+ * message clair
+ * message chiffré juste
+ * 32 messages chiffrés faux
 _______________________________
 
 Etudiant(e) : 22001994 - BOURBONNOT Marc
